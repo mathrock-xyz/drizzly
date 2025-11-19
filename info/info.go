@@ -7,6 +7,7 @@ import (
 func init() {
 	Info.AddCommand(write)
 	Info.AddCommand(cat)
+	Info.AddCommand(ls)
 	Info.AddCommand(rm)
 }
 

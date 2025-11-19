@@ -34,6 +34,7 @@ var write = &cobra.Command{
 		}
 
 		path := filepath.Join(abs, obj.Name())
+
 		return db.DB.Update(func(tx *bolt.Tx) error {
 			return tx.Bucket(bucket).Put([]byte(path), []byte(desc))
 		})
