@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"charm.land/lipgloss/v2"
+	"charm.land/lipgloss/v2/table"
 	"github.com/mathrock-xyz/drizzly/db"
 	"github.com/spf13/cobra"
 	bolt "go.etcd.io/bbolt"
@@ -19,6 +21,11 @@ var ls = &cobra.Command{
 			return
 		}
 
+		base := lipgloss.NewStyle().Padding(0, 1)
+		header := base.Foreground(lipgloss.Color("252")).Bold(true)
+
+		objects := [][]string{}
+
 		for _, entry := range entries {
 			abs, err := filepath.Abs(entry.Name())
 			if err != nil {
@@ -32,17 +39,32 @@ var ls = &cobra.Command{
 			_ = db.DB.View(func(tx *bolt.Tx) (err error) {
 				val := tx.Bucket(bucket).Get([]byte(path))
 
-				if val == nil {
-					desc = "Nooo"
-				}
-
 				desc = string(val)
+
 				return
 			})
 
-			fmt.Println(entry.Name(), " -> ", desc)
+			if desc == "" {
+				continue
+			}
+
+			objects = append(objects, []string{entry.Name(), desc})
 		}
 
+		t := table.New().
+			Border(lipgloss.NormalBorder()).
+			BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("238"))).
+			Headers("Name", "Description").
+			Width(40).
+			Rows(objects...).
+			StyleFunc(func(row, col int) lipgloss.Style {
+				if row == table.HeaderRow {
+					return header
+				}
+				return base.Foreground(lipgloss.Color("252"))
+			})
+
+		_, err = fmt.Println(t)
 		return
 	},
 }
